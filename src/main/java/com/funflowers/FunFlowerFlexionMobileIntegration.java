@@ -40,7 +40,7 @@ public class FunFlowerFlexionMobileIntegration implements Integration {
         HttpResponse<JsonNode> json = doGet(
                 "http://sandbox.flexionmobile.com/javachallenge/rest/developer/​{developerId}​/all",
                 ImmutableMap.of("developerId", DEVELOPER_ID));
-        return Arrays.asList(fromJson(json.getBody().getArray().toString(), MyPurchase[].class));
+        return Arrays.asList(fromJson(json.getBody().getObject().get("purchases").toString(), MyPurchase[].class));
     }
 
     public void consume(Purchase purchase) {
@@ -65,7 +65,9 @@ public class FunFlowerFlexionMobileIntegration implements Integration {
     private HttpResponse<JsonNode> doRequest(HttpRequest request) {
         HttpResponse<JsonNode> response;
         try {
+            System.out.println(request.getHttpMethod() +"," +request.getUrl());
             response = request.asJson();
+            System.out.println(response.getStatus() +"," +response.getBody());
         } catch (Exception e) {
             throw new IntegratorException(e);
         }

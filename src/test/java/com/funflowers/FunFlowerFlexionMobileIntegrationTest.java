@@ -3,6 +3,8 @@ package com.funflowers;
 import com.flexionmobile.codingchallenge.integration.Purchase;
 import com.funflowers.HttpRequestFactory.RequestType;
 import com.funflowers.exception.IntegratorException;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.exceptions.UnirestException;
@@ -44,8 +46,12 @@ public class FunFlowerFlexionMobileIntegrationTest {
 
     private void mockReturnValue(int status, String body){
         try {
+            JsonArray array = new JsonArray();
             JsonNode json = new JsonNode(body);
-            doReturn(status).when(returnValue).getStatus();
+            JsonObject jsonObject = new JsonObject();
+            jsonObject.addProperty("Purchases", body);
+
+                    doReturn(status).when(returnValue).getStatus();
             doReturn(json).when(returnValue).getBody();
             doReturn(returnValue).when(request).asJson();
         } catch (UnirestException e) {
@@ -95,17 +101,26 @@ public class FunFlowerFlexionMobileIntegrationTest {
     @Test
     public void shouldGetAllPurchases() {
         //given
-        mockReturnValue(HttpStatus.SC_OK,"[{\"consumed\":true,\"id\":\"asd\",\"itemId\":\"alma\"}]");
+        mockReturnValue(HttpStatus.SC_OK,"{\"purchases\":[" +
+                "{\"consumed\":true,\"id\":\"asd\",\"itemId\":\"alma\"}," +
+                "{\"consumed\":false,\"id\":\"asd2\",\"itemId\":\"alma2\"}" +
+                "]}");
 
         //when
         List<Purchase> actual = integrator.getPurchases();
 
         //then
-        MyPurchase expected = new MyPurchase();
-        expected.setConsumed(true);
-        expected.setId("asd");
-        expected.setItemId("alma");
-        assertThat(actual).containsOnly(expected);
+        MyPurchase expected1 = new MyPurchase();
+        expected1.setConsumed(true);
+        expected1.setId("asd");
+        expected1.setItemId("alma");
+
+        MyPurchase expected2 = new MyPurchase();
+        expected2.setConsumed(false);
+        expected2.setId("asd2");
+        expected2.setItemId("alma2");
+
+        assertThat(actual).containsOnly(expected1,expected2);
     }
 
 }
