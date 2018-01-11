@@ -3,8 +3,6 @@ package com.funflowers;
 import com.flexionmobile.codingchallenge.integration.Purchase;
 import com.funflowers.HttpRequestFactory.RequestType;
 import com.funflowers.exception.IntegratorException;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.exceptions.UnirestException;
@@ -27,33 +25,29 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
 
 @RunWith(MockitoJUnitRunner.class)
-public class FunFlowerFlexionMobileIntegrationTest {
+public class FunFlowerFlexionMobileIntegratorTest {
 
     @Mock
     private HttpRequestFactory httpRequestFactory;
     @Mock
     private HttpRequest request;
     @Mock
-    private HttpResponse<JsonNode> returnValue;
+    private HttpResponse<JsonNode> mockResponse;
 
     @InjectMocks
-    private FunFlowerFlexionMobileIntegration integrator;
+    private FunFlowerFlexionMobileIntegrator integrator;
 
     @Before
     public void setUp() {
         doReturn(request).when(httpRequestFactory).create(Mockito.any(RequestType.class), anyString(), anyMap());
     }
 
-    private void mockReturnValue(int status, String body){
+    private void mockResponse(int statusCode, String body) {
         try {
-            JsonArray array = new JsonArray();
             JsonNode json = new JsonNode(body);
-            JsonObject jsonObject = new JsonObject();
-            jsonObject.addProperty("Purchases", body);
-
-                    doReturn(status).when(returnValue).getStatus();
-            doReturn(json).when(returnValue).getBody();
-            doReturn(returnValue).when(request).asJson();
+            doReturn(statusCode).when(mockResponse).getStatus();
+            doReturn(json).when(mockResponse).getBody();
+            doReturn(mockResponse).when(request).asJson();
         } catch (UnirestException e) {
             throw new RuntimeException(e);
         }
@@ -62,7 +56,7 @@ public class FunFlowerFlexionMobileIntegrationTest {
     @Test
     public void shouldThrowExceptionWhenErrorOccur() {
         //given
-        mockReturnValue(HttpStatus.SC_NOT_FOUND,"{}");
+        mockResponse(HttpStatus.SC_NOT_FOUND, "{}");
 
         //when
         Throwable thrown = catchThrowable(() -> integrator.buy("alma"));
@@ -70,10 +64,11 @@ public class FunFlowerFlexionMobileIntegrationTest {
         //then
         assertThat(thrown).isInstanceOf(IntegratorException.class).hasMessageContaining("unexpected status 404, {}");
     }
+
     @Test
     public void shouldBuyUnconsumedItems() {
         //given
-        mockReturnValue(HttpStatus.SC_OK,"{\"consumed\":false,\"id\":\"asd\",\"itemId\":\"alma\"}");
+        mockResponse(HttpStatus.SC_OK, "{\"consumed\":false,\"id\":\"asd\",\"itemId\":\"alma\"}");
 
         //when
         Purchase actual = integrator.buy("alma");
@@ -89,7 +84,7 @@ public class FunFlowerFlexionMobileIntegrationTest {
     @Test
     public void shouldBeAbleToConsumeBoughtItemWithoutException() {
         //given
-        mockReturnValue(HttpStatus.SC_OK,"{}");
+        mockResponse(HttpStatus.SC_OK, "{}");
         MyPurchase boughtItem = new MyPurchase();
         boughtItem.setConsumed(false);
         boughtItem.setId("1");
@@ -101,7 +96,7 @@ public class FunFlowerFlexionMobileIntegrationTest {
     @Test
     public void shouldGetAllPurchases() {
         //given
-        mockReturnValue(HttpStatus.SC_OK,"{\"purchases\":[" +
+        mockResponse(HttpStatus.SC_OK, "{\"purchases\":[" +
                 "{\"consumed\":true,\"id\":\"asd\",\"itemId\":\"alma\"}," +
                 "{\"consumed\":false,\"id\":\"asd2\",\"itemId\":\"alma2\"}" +
                 "]}");
@@ -120,7 +115,7 @@ public class FunFlowerFlexionMobileIntegrationTest {
         expected2.setId("asd2");
         expected2.setItemId("alma2");
 
-        assertThat(actual).containsOnly(expected1,expected2);
+        assertThat(actual).containsOnly(expected1, expected2);
     }
 
 }

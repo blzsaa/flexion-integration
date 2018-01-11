@@ -17,13 +17,13 @@ import java.util.Map;
 import static com.funflowers.HttpRequestFactory.RequestType.GET_REQUEST;
 import static com.funflowers.HttpRequestFactory.RequestType.POST_REQUEST;
 
-public class FunFlowerFlexionMobileIntegration implements Integration {
+public class FunFlowerFlexionMobileIntegrator implements Integration {
     private static final String DEVELOPER_ID = "blzsaa";
 
     private final Gson gson;
     private final HttpRequestFactory httpRequestFactory;
 
-    public FunFlowerFlexionMobileIntegration(HttpRequestFactory httpRequestFactory) {
+    public FunFlowerFlexionMobileIntegrator(HttpRequestFactory httpRequestFactory) {
         this.gson = new Gson();
         this.httpRequestFactory = httpRequestFactory;
     }
@@ -38,7 +38,7 @@ public class FunFlowerFlexionMobileIntegration implements Integration {
 
     public List<Purchase> getPurchases() {
         HttpResponse<JsonNode> json = doGet(
-                "http://sandbox.flexionmobile.com/javachallenge/rest/developer/​{developerId}​/all",
+                "http://sandbox.flexionmobile.com/javachallenge/rest/developer/{developerId}/all",
                 ImmutableMap.of("developerId", DEVELOPER_ID));
         return Arrays.asList(fromJson(json.getBody().getObject().get("purchases").toString(), MyPurchase[].class));
     }
@@ -65,9 +65,7 @@ public class FunFlowerFlexionMobileIntegration implements Integration {
     private HttpResponse<JsonNode> doRequest(HttpRequest request) {
         HttpResponse<JsonNode> response;
         try {
-            System.out.println(request.getHttpMethod() +"," +request.getUrl());
             response = request.asJson();
-            System.out.println(response.getStatus() +"," +response.getBody());
         } catch (Exception e) {
             throw new IntegratorException(e);
         }
